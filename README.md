@@ -6,7 +6,8 @@ This is bot program to post automatically on Twitter[(@infra_workshop)](https://
 
 ## What is Infra-workshop ?
 
-Infra-workshop is japan community for study computing infrastructure.
+Infra-workshop is japanese online community for study computer infrastructure.
+(infra-workshop writes as "インフラ勉強会" in Japanese.)
 
 ## Creater / Licenser
 
