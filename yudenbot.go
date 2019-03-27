@@ -22,6 +22,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/0Delta/yudenbot_devel/eventdata"
+	"github.com/0Delta/yudenbot_devel/twitter"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -32,18 +34,18 @@ const (
 )
 
 func main() {
-	_main(context.TODO())
+	_main(context.Background())
 }
 
-var events []EventData
+var events []eventdata.EventData
 var jst, _ = time.LoadLocation("Asia/Tokyo")
-var twischedules tweetSchedules
+var twischedules twitter.Schedules
 
 type configArgs struct {
-	WordpressURL    string `yaml:wordpressurl`
-	DayLine         int    `yaml:dayline`
-	NextPreviewHour int    `yaml:nextpreviewhour`
-	SummaryPostHour int    `yaml:summaryposthour`
+	WordpressURL    string `yaml:"wordpressurl"`
+	DayLine         int    `yaml:"dayline"`
+	NextPreviewHour int    `yaml:"nextpreviewhour"`
+	SummaryPostHour int    `yaml:"summaryposthour"`
 }
 
 func GetConfig(ctx context.Context) (args *configArgs, err error) {
@@ -59,19 +61,6 @@ func GetConfig(ctx context.Context) (args *configArgs, err error) {
 		return nil, err
 	}
 	return args, nil
-}
-
-func getToken() *TwitterAuth {
-	buf, err := ioutil.ReadFile("./.token.yml")
-	if err != nil {
-		log.Fatal("Error while load token : ", err)
-	}
-	var auth TwitterAuth
-	err = yaml.Unmarshal(buf, &auth)
-	if err != nil {
-		log.Fatal("Error while unmarshal token: ", err)
-	}
-	return &auth
 }
 
 var fetchtime time.Time
@@ -91,7 +80,7 @@ func _main(ctx context.Context) (string, error) {
 				if err != nil {
 					return err
 				}
-				events, err = GetEventsFromWordpress(conf.WordpressURL, conf.DayLine)
+				events, err = eventdata.GetEventsFromWordpress(conf.WordpressURL, conf.DayLine)
 				if err != nil {
 					return err
 				}
@@ -104,10 +93,10 @@ func _main(ctx context.Context) (string, error) {
 						nextPostHour = e.EndDate
 					}
 				}
-				var s tweetSchedules
+				var s twitter.Schedules
 				for _, e := range events {
 					// start
-					s.append(e,
+					s.Append(e,
 						e.StartDate,
 						strings.Join([]string{
 							"はじまるよ！", "\n",
@@ -117,7 +106,7 @@ func _main(ctx context.Context) (string, error) {
 						}, ""),
 					)
 					// remind
-					s.append(e,
+					s.Append(e,
 						e.StartDate.Add(-30*time.Minute),
 						strings.Join([]string{
 							"もうすぐ始まるよ！\n", e.Title, "\n",
@@ -128,7 +117,7 @@ func _main(ctx context.Context) (string, error) {
 					// today's summary
 					d = time.Now()
 					if e.StartDate.Before(dayLine) {
-						s.append(e,
+						s.Append(e,
 							time.Date(d.Year(), d.Month(), d.Day(), conf.SummaryPostHour, 0, 0, 0, jst),
 							strings.Join([]string{
 								"今日(", d.In(jst).Format("01/02"), ")の #インフラ勉強会 は...\n",
@@ -141,7 +130,7 @@ func _main(ctx context.Context) (string, error) {
 					// next
 					d = d.Add(24 * time.Hour)
 					if e.StartDate.After(dayLine) && e.StartDate.Before(dayLine.Add(24*time.Hour)) {
-						s.append(e,
+						s.Append(e,
 							nextPostHour,
 							strings.Join([]string{
 								"#インフラ勉強会 、次回(", d.In(jst).Format("01/02"), ")は...\n",
@@ -166,11 +155,11 @@ func _main(ctx context.Context) (string, error) {
 					return err
 				}
 				now := time.Now()
-				auth := getToken()
+				auth := twitter.GetToken("./.token.yml")
 				for _, t := range twischedules {
 					if t.Time.After(fetchtime) && t.Time.Before(now) && !t.Executed {
 						log.Printf("tweet : %v", t.Message)
-						tweet(t.Message, auth)
+						twitter.Tweet(t.Message, auth)
 						t.Executed = true
 					}
 				}
@@ -187,22 +176,6 @@ func _main(ctx context.Context) (string, error) {
 func YudenBot(ctx context.Context, execList []Executor) {
 	log.Print("run Yuden-Bot")
 
-	// updater
-	// Wordpressから情報Get
-	// 書き出す
-	// 30分ごと程度
-
-	// fetcher
-	// 読み出し
-	// 時刻チェック
-	// execute()
-	// 1分毎
-	Schedule(ctx, execList)
+	// Schedule(ctx, execList)
 	log.Println("Yuden-Bot End.")
 }
-
-// executer-d
-// discordにpost
-
-// executer-t
-// twitterにpost
