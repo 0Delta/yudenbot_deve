@@ -17,8 +17,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -66,6 +68,13 @@ func GetConfig(ctx context.Context) (args *configArgs, err error) {
 var fetchtime time.Time
 
 func _main(ctx context.Context) (string, error) {
+	logfile, err := os.OpenFile("./test.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		panic("cannnot open test.log:" + err.Error())
+	}
+	defer logfile.Close()
+	log.SetOutput(io.MultiWriter(logfile, os.Stdout))
+
 	buf, err := ioutil.ReadFile("./.config.yml")
 	if err != nil {
 		log.Fatal("Error while load config : ", err)
@@ -176,6 +185,6 @@ func _main(ctx context.Context) (string, error) {
 func YudenBot(ctx context.Context, execList []Executor) {
 	log.Print("run Yuden-Bot")
 
-	// Schedule(ctx, execList)
+	Schedule(ctx, execList)
 	log.Println("Yuden-Bot End.")
 }
