@@ -13,7 +13,9 @@ require (
 	gopkg.in/yaml.v2 v2.2.2
 	github.com/0Delta/yudenbot_devel/eventdata
 	github.com/0Delta/yudenbot_devel/twitter
+	github.com/0Delta/yudenbot_devel/discord
 )
 
 	replace github.com/0Delta/yudenbot_devel/eventdata => ./eventdata
 	replace github.com/0Delta/yudenbot_devel/twitter => ./twitter
+	replace github.com/0Delta/yudenbot_devel/discord => ./discord

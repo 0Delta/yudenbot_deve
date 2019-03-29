@@ -17,13 +17,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
-	"os"
 	"strings"
 	"time"
 
+	"github.com/0Delta/yudenbot_devel/discord"
 	"github.com/0Delta/yudenbot_devel/eventdata"
 	"github.com/0Delta/yudenbot_devel/twitter"
 	yaml "gopkg.in/yaml.v2"
@@ -42,6 +41,14 @@ func main() {
 var events []eventdata.EventData
 var jst, _ = time.LoadLocation("Asia/Tokyo")
 var twischedules twitter.Schedules
+
+type discordschedule struct {
+	Event    eventdata.EventData
+	Time     time.Time
+	Executed bool
+}
+
+var discordschedules []discordschedule
 
 type configArgs struct {
 	WordpressURL    string `yaml:"wordpressurl"`
@@ -68,12 +75,12 @@ func GetConfig(ctx context.Context) (args *configArgs, err error) {
 var fetchtime time.Time
 
 func _main(ctx context.Context) (string, error) {
-	logfile, err := os.OpenFile("./test.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-	if err != nil {
-		panic("cannnot open test.log:" + err.Error())
-	}
-	defer logfile.Close()
-	log.SetOutput(io.MultiWriter(logfile, os.Stdout))
+	// logfile, err := os.OpenFile("./test.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	// if err != nil {
+	// 	panic("cannnot open test.log:" + err.Error())
+	// }
+	// defer logfile.Close()
+	// log.SetOutput(io.MultiWriter(logfile, os.Stdout))
 
 	buf, err := ioutil.ReadFile("./.config.yml")
 	if err != nil {
@@ -103,6 +110,7 @@ func _main(ctx context.Context) (string, error) {
 					}
 				}
 				var s twitter.Schedules
+				var disSc []discordschedule
 				for _, e := range events {
 					// start
 					s.Append(e,
@@ -123,6 +131,7 @@ func _main(ctx context.Context) (string, error) {
 							"#インフラ勉強会",
 						}, ""),
 					)
+					disSc = append(disSc, discordschedule{e, e.StartDate.Add(-30 * time.Minute), false})
 					// today's summary
 					d = time.Now()
 					if e.StartDate.Before(dayLine) {
@@ -151,6 +160,7 @@ func _main(ctx context.Context) (string, error) {
 					}
 				}
 				twischedules = s
+				discordschedules = disSc
 				return err
 			},
 			Tick: 30 * time.Minute,
@@ -177,6 +187,29 @@ func _main(ctx context.Context) (string, error) {
 			},
 			Tick: 1 * time.Minute,
 			// Tick: 1 * time.Minute,
+		},
+		Executor{
+			Name: "discord",
+			Fnc: func(ctx context.Context) (err error) {
+				_, err = GetConfig(ctx)
+				if err != nil {
+					return err
+				}
+				now := time.Now()
+				auth := discord.GetToken("./.token.yml")
+				for _, d := range discordschedules {
+					if d.Time.After(fetchtime) && d.Time.Before(now) && !d.Executed {
+						log.Printf("discord : %v", d.Event.Title)
+						s := discord.GetDiscord(auth.Token)
+						c := discord.CreateTextChannel(s, auth.GuildID, d.Event.Title)
+						discord.SendMessage(s, c, d.Event.Description)
+						d.Executed = true
+					}
+				}
+				fetchtime = now
+				return nil
+			},
+			Tick: 1 * time.Minute,
 		},
 	})
 	return fmt.Sprintf("Hello ƛ!"), nil
