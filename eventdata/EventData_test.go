@@ -39,7 +39,7 @@ func TestGetEventData(t *testing.T) {
 	for n := range tests {
 		raw, err := ioutil.ReadFile("EventData_testcase/" + tests[n].name + ".json")
 		if err != nil {
-			t.Errorf("Can't load json : %v", tests[n].name)
+			t.Errorf("Can't load json : %v / err : %v", tests[n].name, err)
 			tests[n].loadErr = true
 		} else {
 			tests[n].loadErr = false
