@@ -72,7 +72,7 @@ var datasCache []EventData
 func GetEventDatas(jsonBytes []byte) (datas []EventData, err error) {
 	s := md5.New()
 	hash := s.Sum(jsonBytes)
-	if eventsHash != nil && reflect.DeepEqual(eventsHash, hash) == true {
+	if reflect.DeepEqual(eventsHash, hash) {
 		log.Println("GetEventDatas return cache")
 		return datasCache, nil
 	}
