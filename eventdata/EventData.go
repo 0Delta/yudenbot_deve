@@ -3,10 +3,12 @@ package eventdata
 import (
 	"crypto/md5"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"reflect"
+	"regexp"
 	"time"
 )
 
@@ -45,6 +47,7 @@ var jst, _ = time.LoadLocation("Asia/Tokyo")
 func GetEventsFromWordpress(url string, dayLineHour int) (events []EventData, err error) {
 	nowt := time.Now()
 	nowt = time.Date(nowt.Year(), nowt.Month(), nowt.Day(), dayLineHour, 0, 0, 0, jst)
+	nowt = nowt.Add(time.Hour * 24 * 3)
 	sdt := nowt.Format("2006/01/02T15:04")
 	edt := nowt.Add(2 * 24 * time.Hour).Add(1 * time.Minute).Format("2006/01/02T15:04")
 	url = "https://" + url + "/?rest_route=/tribe/events/v1/events" + "&start_date=" + sdt + "&end_date=" + edt
@@ -117,6 +120,8 @@ func parseEventData(rawdata *rawEventData) (data EventData, err error) {
 	data.Title = rawdata.Title
 	data.Description = rawdata.Description
 
+	data.Description = parseDescription(rawdata.Description)
+
 	data.StartDate, _ = time.Parse("2006-01-02 15:04:05", rawdata.StartDateStr)
 	data.EndDate, _ = time.Parse("2006-01-02 15:04:05", rawdata.EndDateStr)
 	if len(rawdata.Organizer) == 0 {
@@ -125,4 +130,27 @@ func parseEventData(rawdata *rawEventData) (data EventData, err error) {
 		data.Organizer = rawdata.Organizer[0].Organizer
 	}
 	return
+}
+
+func parseDescription(raw string) (parsed string) {
+	r := regexp.MustCompile(`<(.+?)>(.+?)<.+?>`)
+	br := regexp.MustCompile(`(p)|(br.*)|(h[0-9])`)
+	b := regexp.MustCompile(`^(h¥d)|(strong)|(b)¥s*$`)
+	tmp := r.FindAllStringSubmatch(raw, -1)
+	for _, t := range tmp {
+		// add prefixes
+		if b.MatchString(t[1]) {
+			t[2] = "*" + t[2] + "*"
+		}
+
+		// print string
+		if br.MatchString(t[1]) {
+			parsed += fmt.Sprintln(t[2])
+		} else {
+			parsed += fmt.Sprint(t[2])
+		}
+	}
+	log.Print(parsed)
+
+	return parsed
 }

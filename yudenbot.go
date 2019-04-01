@@ -201,7 +201,8 @@ func _main(ctx context.Context) (string, error) {
 					if d.Time.After(fetchtime) && d.Time.Before(now) && !d.Executed {
 						log.Printf("discord : %v", d.Event.Title)
 						s := discord.GetDiscord(auth.Token)
-						c := discord.CreateTextChannel(s, auth.GuildID, d.Event.Title)
+						chname := fmt.Sprintf("%s-%s", d.Event.StartDate.Format("0102"), d.Event.Title)
+						c := discord.CreateTextChannel(s, auth.GuildID, chname)
 						discord.SendMessage(s, c, d.Event.Description)
 						d.Executed = true
 					}
