@@ -174,11 +174,11 @@ func _main(ctx context.Context) (string, error) {
 					return err
 				}
 				now := time.Now()
-				auth := twitter.GetToken("./.token.yml")
+				// auth := twitter.GetToken("./.token.yml")
 				for _, t := range twischedules {
 					if t.Time.After(fetchtime) && t.Time.Before(now) && !t.Executed {
 						log.Printf("tweet : %v", t.Message)
-						twitter.Tweet(t.Message, auth)
+						// twitter.Tweet(t.Message, auth)
 						t.Executed = true
 					}
 				}
