@@ -95,100 +95,13 @@ func _main(ctx context.Context) (string, error) {
 	YudenBot(ctx, []Executor{
 		Executor{
 			Name: "updater",
-			Fnc: func(ctx context.Context) (err error) {
-				conf, err := GetConfig(ctx)
-				if err != nil {
-					return err
-				}
-				events, err = eventdata.GetEventsFromWordpress(conf.WordpressURL, conf.DayLine)
-				if err != nil {
-					return err
-				}
-				// update tweetSchedule
-				d := time.Now()
-				dayLine := time.Date(d.Year(), d.Month(), d.Day(), conf.DayLine, 0, 0, 0, jst).Add(24 * time.Hour)
-				nextPostHour := time.Date(d.Year(), d.Month(), d.Day(), conf.SummaryPostHour, 0, 0, 0, jst)
-				for _, e := range events {
-					if e.EndDate.After(nextPostHour) && e.StartDate.Before(dayLine) {
-						nextPostHour = e.EndDate
-					}
-				}
-				var s twitter.Schedules
-				var disSc []discordschedule
-				for _, e := range events {
-					// start
-					s.Append(e,
-						e.StartDate,
-						strings.Join([]string{
-							"はじまるよ！", "\n",
-							e.Title, "\n",
-							e.URL, "\n",
-							"#インフラ勉強会",
-						}, ""),
-					)
-					// remind
-					s.Append(e,
-						e.StartDate.Add(-30*time.Minute),
-						strings.Join([]string{
-							"もうすぐ始まるよ！\n", e.Title, "\n",
-							e.URL, "\n",
-							"#インフラ勉強会",
-						}, ""),
-					)
-					disSc = append(disSc, discordschedule{e, e.StartDate.Add(-30 * time.Minute), false})
-					// today's summary
-					d = time.Now()
-					if e.StartDate.Before(dayLine) {
-						s.Append(e,
-							time.Date(d.Year(), d.Month(), d.Day(), conf.SummaryPostHour, 0, 0, 0, jst),
-							strings.Join([]string{
-								"今日(", d.In(jst).Format("01/02"), ")の #インフラ勉強会 は...\n",
-								e.Title, "\n",
-								e.StartDate.In(jst).Format("15:04"), " - ", e.EndDate.In(jst).Format("15:04"), "\n",
-								e.URL,
-							}, ""),
-						)
-					}
-					// next
-					d = d.Add(24 * time.Hour)
-					if e.StartDate.After(dayLine) && e.StartDate.Before(dayLine.Add(24*time.Hour)) {
-						s.Append(e,
-							nextPostHour,
-							strings.Join([]string{
-								"#インフラ勉強会 、次回(", d.In(jst).Format("01/02"), ")は...\n",
-								e.Title, "\n",
-								e.StartDate.In(jst).Format("15:04"), " - ", e.EndDate.In(jst).Format("15:04"), "\n",
-								e.URL,
-							}, ""),
-						)
-					}
-				}
-				UpdateTwitterScedules(s)
-				UpdateDiscordScedules(disSc)
-				return err
-			},
+			Fnc:  updater,
 			Tick: 30 * time.Minute,
 			// Tick: 1 * time.Minute,
 		},
 		Executor{
 			Name: "fetcher",
-			Fnc: func(ctx context.Context) (err error) {
-				_, err = GetConfig(ctx)
-				if err != nil {
-					return err
-				}
-				now := time.Now()
-				// auth := twitter.GetToken("./.token.yml")
-				for _, t := range twischedules {
-					if t.Time.After(fetchtime) && t.Time.Before(now) && !t.Executed {
-						log.Printf("tweet : %v", t.Message)
-						// twitter.Tweet(t.Message, auth)
-						t.Executed = true
-					}
-				}
-				fetchtime = now
-				return nil
-			},
+			Fnc:  fetcher,
 			Tick: 1 * time.Minute,
 			// Tick: 1 * time.Minute,
 		},
@@ -221,6 +134,97 @@ func YudenBot(ctx context.Context, execList []Executor) {
 }
 
 // compornents
+func updater(ctx context.Context) (err error) {
+	conf, err := GetConfig(ctx)
+	if err != nil {
+		return err
+	}
+	events, err = eventdata.GetEventsFromWordpress(conf.WordpressURL, conf.DayLine)
+	if err != nil {
+		return err
+	}
+	// update tweetSchedule
+	d := time.Now()
+	dayLine := time.Date(d.Year(), d.Month(), d.Day(), conf.DayLine, 0, 0, 0, jst).Add(24 * time.Hour)
+	nextPostHour := time.Date(d.Year(), d.Month(), d.Day(), conf.SummaryPostHour, 0, 0, 0, jst)
+	for _, e := range events {
+		if e.EndDate.After(nextPostHour) && e.StartDate.Before(dayLine) {
+			nextPostHour = e.EndDate
+		}
+	}
+	var s twitter.Schedules
+	var disSc []discordschedule
+	for _, e := range events {
+		// start
+		s.Append(e,
+			e.StartDate,
+			strings.Join([]string{
+				"はじまるよ！", "\n",
+				e.Title, "\n",
+				e.URL, "\n",
+				"#インフラ勉強会",
+			}, ""),
+		)
+		// remind
+		s.Append(e,
+			e.StartDate.Add(-30*time.Minute),
+			strings.Join([]string{
+				"もうすぐ始まるよ！\n", e.Title, "\n",
+				e.URL, "\n",
+				"#インフラ勉強会",
+			}, ""),
+		)
+		disSc = append(disSc, discordschedule{e, e.StartDate.Add(-30 * time.Minute), false})
+		// today's summary
+		d = time.Now()
+		if e.StartDate.Before(dayLine) {
+			s.Append(e,
+				time.Date(d.Year(), d.Month(), d.Day(), conf.SummaryPostHour, 0, 0, 0, jst),
+				strings.Join([]string{
+					"今日(", d.In(jst).Format("01/02"), ")の #インフラ勉強会 は...\n",
+					e.Title, "\n",
+					e.StartDate.In(jst).Format("15:04"), " - ", e.EndDate.In(jst).Format("15:04"), "\n",
+					e.URL,
+				}, ""),
+			)
+		}
+		// next
+		d = d.Add(24 * time.Hour)
+		if e.StartDate.After(dayLine) && e.StartDate.Before(dayLine.Add(24*time.Hour)) {
+			s.Append(e,
+				nextPostHour,
+				strings.Join([]string{
+					"#インフラ勉強会 、次回(", d.In(jst).Format("01/02"), ")は...\n",
+					e.Title, "\n",
+					e.StartDate.In(jst).Format("15:04"), " - ", e.EndDate.In(jst).Format("15:04"), "\n",
+					e.URL,
+				}, ""),
+			)
+		}
+	}
+	UpdateTwitterScedules(s)
+	UpdateDiscordScedules(disSc)
+	return err
+}
+
+func fetcher(ctx context.Context) (err error) {
+	_, err = GetConfig(ctx)
+	if err != nil {
+		return err
+	}
+	now := time.Now()
+	// auth := twitter.GetToken("./.token.yml")
+	for _, t := range twischedules {
+		if t.Time.After(fetchtime) && t.Time.Before(now) && !t.Executed {
+			log.Printf("tweet : %v", t.Message)
+			// twitter.Tweet(t.Message, auth)
+			t.Executed = true
+		}
+	}
+	fetchtime = now
+	return nil
+}
+
 func createAndPostDiscordChannel(ctx context.Context) (err error) {
 	_, err = GetConfig(ctx)
 	if err != nil {
