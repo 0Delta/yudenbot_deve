@@ -190,26 +190,7 @@ func _main(ctx context.Context) (string, error) {
 		},
 		Executor{
 			Name: "discord",
-			Fnc: func(ctx context.Context) (err error) {
-				_, err = GetConfig(ctx)
-				if err != nil {
-					return err
-				}
-				now := time.Now()
-				auth := discord.GetToken("./.token.yml")
-				for _, d := range discordschedules {
-					if d.Time.After(fetchtime) && d.Time.Before(now) && !d.Executed {
-						log.Printf("discord : %v", d.Event.Title)
-						s := discord.GetDiscord(auth.Token)
-						chname := fmt.Sprintf("%s-%s", d.Event.StartDate.Format("0102"), d.Event.Title)
-						c := discord.CreateTextChannel(s, auth.GuildID, chname)
-						discord.SendMessage(s, c, d.Event.Description)
-						d.Executed = true
-					}
-				}
-				fetchtime = now
-				return nil
-			},
+			Fnc:  createAndPostDiscordChannel,
 			Tick: 1 * time.Minute,
 		},
 	})
@@ -221,4 +202,47 @@ func YudenBot(ctx context.Context, execList []Executor) {
 
 	Schedule(ctx, execList)
 	log.Println("Yuden-Bot End.")
+}
+
+// compornents
+func createAndPostDiscordChannel(ctx context.Context) (err error) {
+	_, err = GetConfig(ctx)
+	if err != nil {
+		return err
+	}
+	now := time.Now()
+	auth := discord.GetToken("./.token.yml")
+	for _, d := range discordschedules {
+		if d.Time.After(fetchtime) && d.Time.Before(now) && !d.Executed {
+			log.Printf("discord : %v", d.Event.Title)
+			s := discord.GetDiscord(auth.Token)
+			chname := fmt.Sprintf("%s-%s", d.Event.StartDate.Format("0102"), d.Event.Title)
+			c := discord.CreateTextChannel(s, auth.GuildID, chname)
+
+			// create post message
+			message := fmt.Sprintln(d.Event.Title)
+			message += fmt.Sprintln(d.Event.URL)
+			message += fmt.Sprintf("%s 〜 %s", d.Event.StartDate.Format("01:02"), d.Event.StartDate.Format("01:02"))
+			message += fmt.Sprintln()
+			message += fmt.Sprintln("----")
+			message += d.Event.Description
+			discord.SendMessage(s, c, message)
+			message = `■ ご注意!!
+音声チャンネルは Study-Group01 です。入室時には意図せずマイクがオンのままになっていないかご確認をお願いします。
+http://bit.ly/2HWB9ZL
+進行に影響がある場合は一旦 AFK 部屋に移動させて頂く場合がありますのでその際はマイクをミュートにしつつ戻ってきてくだされば。
+
+■ 質問したいとき
+頭に "Q. " をつけてコメントしておいてくだされば。あとで主催者が拾います。
+
+■ 匿名で質問したいとき
+質問箱 BOT さんに "Q. " の付いた質問を投げるとチャンネルに匿名で投稿し直してくれます。
+勉強会中、みんなの前だとちょっと質問しづらいな‥って思ったら質問箱 BOT に "Q." が先頭についたメッセージを送ってください。
+http://bit.ly/2rjZyjL`
+			discord.SendMessage(s, c, message)
+			d.Executed = true
+		}
+	}
+	fetchtime = now
+	return nil
 }

@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"io/ioutil"
 	"log"
 	"testing"
 	"time"
@@ -45,6 +46,34 @@ func TestYudenbot(t *testing.T) {
 			go YudenBot(tt.args.ctx, tt.args.execList)
 			time.Sleep(25 * time.Second)
 			cancel()
+		})
+	}
+}
+
+func Test_createAndPostDiscordChannel(t *testing.T) {
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{
+			name:    "Test 1",
+			wantErr: true,
+		},
+		// TODO: Add test cases.
+	}
+	discordschedules = []
+
+	ctx := context.Background()
+	buf, err := ioutil.ReadFile("./.config.yml")
+	if err != nil {
+		t.Fatal("Error while load config : ", err)
+	}
+	ctx = context.WithValue(ctx, config, buf)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := createAndPostDiscordChannel(ctx); (err != nil) != tt.wantErr {
+				t.Errorf("createAndPostDiscordChannel() error = %v, wantErr %v", err, tt.wantErr)
+			}
 		})
 	}
 }
