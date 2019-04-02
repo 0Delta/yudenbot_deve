@@ -23,6 +23,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/0Delta/colog2slack"
 	"github.com/0Delta/yudenbot_devel/discord"
 	"github.com/0Delta/yudenbot_devel/eventdata"
 	"github.com/0Delta/yudenbot_devel/twitter"
@@ -76,6 +77,23 @@ func GetConfig(ctx context.Context) (args *configArgs, err error) {
 	return args, nil
 }
 
+type secretConf struct {
+	SlackURL4Log string `yaml:"slackurlforlog" json:"slackurlforlog"`
+}
+
+func GetToken(filepath string) *secretConf {
+	buf, err := ioutil.ReadFile(filepath)
+	if err != nil {
+		log.Fatal("Error while load token : ", err)
+	}
+	var conf secretConf
+	err = yaml.Unmarshal(buf, &conf)
+	if err != nil {
+		log.Fatal("Error while unmarshal token: ", err)
+	}
+	return &conf
+}
+
 var fetchtime time.Time
 
 func _main(ctx context.Context) (string, error) {
@@ -91,6 +109,8 @@ func _main(ctx context.Context) (string, error) {
 		log.Fatal("Error while load config : ", err)
 	}
 	ctx = context.WithValue(ctx, config, buf)
+	conf := GetToken(".token.yml")
+	colog2slack.Enable(conf.SlackURL4Log)
 
 	YudenBot(ctx, []Executor{
 		Executor{
