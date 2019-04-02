@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"reflect"
 	"regexp"
 	"time"
@@ -114,7 +115,12 @@ func GetEventData(jsonBytes []byte) (data EventData, err error) {
 
 func parseEventData(rawdata *rawEventData) (data EventData, err error) {
 	data.ID = rawdata.ID
-	data.URL = rawdata.URL
+	parsedurl, err := url.Parse(rawdata.URL)
+	if err != nil {
+		data.URL = rawdata.URL
+	} else {
+		data.URL = fmt.Sprintf("%s://%s?p=%d", parsedurl.Scheme, parsedurl.Host, data.ID)
+	}
 
 	// TODO : trim for post
 	data.Title = rawdata.Title
