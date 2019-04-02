@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestGetEventData(t *testing.T) {
@@ -23,15 +24,33 @@ func TestGetEventData(t *testing.T) {
 				jsonBytes: []byte{},
 			},
 			wantData: EventData{
-				ID:          5212,
-				URL:         "wp.infra-workshop.tech?id=5212",
-				Title:       "\u30a4\u30f3\u30d5\u30e9\u30a8\u30f3\u30b8\u30cb\u30a2\u306e\u305f\u3081\u306e\u30c0\u30a4\u30a8\u30c3\u30c8",
-				Description: "",
+				ID:    5212,
+				URL:   `https://wp.infra-workshop.tech?p=5212`,
+				Title: "\u30a4\u30f3\u30d5\u30e9\u30a8\u30f3\u30b8\u30cb\u30a2\u306e\u305f\u3081\u306e\u30c0\u30a4\u30a8\u30c3\u30c8",
+				Description: `1.概要
+`,
+				StartDate: time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC),
+				EndDate:   time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC),
+				Organizer: "",
 			},
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name: "test2",
+			args: args{
+				jsonBytes: []byte{},
+			},
+			wantData: EventData{
+				ID:    5212,
+				URL:   `https://wp.infra-workshop.tech?p=5212`,
+				Title: "\u30a4\u30f3\u30d5\u30e9\u30a8\u30f3\u30b8\u30cb\u30a2\u306e\u305f\u3081\u306e\u30c0\u30a4\u30a8\u30c3\u30c8",
+				Description: `1.概要
+`,
+				StartDate: time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC),
+				EndDate:   time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC),
+				Organizer: "",
+			},
+			wantErr: false,
 		},
 		// TODO: Add test cases.
 	}
@@ -59,7 +78,7 @@ func TestGetEventData(t *testing.T) {
 				return
 			}
 			if !reflect.DeepEqual(gotData, tt.wantData) {
-				t.Errorf("GetEventData() = %v, want %v", gotData, tt.wantData)
+				t.Errorf("GetEventData() = %+v, want %+v", gotData, tt.wantData)
 			}
 		})
 	}
@@ -112,6 +131,7 @@ func TestGetEventsFromWordpress(t *testing.T) {
 				t.Errorf("GetEventsFromWordpress() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
 			// if !reflect.DeepEqual(gotEvents, tt.wantEvents) {
 			// 	t.Errorf("GetEventsFromWordpress() = %v, want %v", gotEvents, tt.wantEvents)
 			// }
