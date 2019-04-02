@@ -11,9 +11,9 @@ require (
 	github.com/garyburd/go-oauth v0.0.0-20180319155456-bca2e7f09a17 // indirect
 	golang.org/x/net v0.0.0-20190327091125-710a502c58a2 // indirect
 	gopkg.in/yaml.v2 v2.2.2
-	github.com/0Delta/yudenbot_devel/eventdata
-	github.com/0Delta/yudenbot_devel/twitter
-	github.com/0Delta/yudenbot_devel/discord
+	github.com/0Delta/yudenbot_devel/eventdata v0.0.0
+	github.com/0Delta/yudenbot_devel/twitter v0.0.0
+	github.com/0Delta/yudenbot_devel/discord v0.0.0
 )
 
 	replace github.com/0Delta/yudenbot_devel/eventdata => ./eventdata
