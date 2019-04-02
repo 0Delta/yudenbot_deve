@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"log"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/0Delta/yudenbot_devel/discord"
@@ -40,6 +41,8 @@ func main() {
 
 var events []eventdata.EventData
 var jst, _ = time.LoadLocation("Asia/Tokyo")
+
+var mtscs sync.Mutex
 var twischedules twitter.Schedules
 
 type discordschedule struct {
@@ -48,6 +51,7 @@ type discordschedule struct {
 	Executed bool
 }
 
+var mdscs sync.Mutex
 var discordschedules []discordschedule
 
 type configArgs struct {
@@ -159,8 +163,8 @@ func _main(ctx context.Context) (string, error) {
 						)
 					}
 				}
-				twischedules = s
-				discordschedules = disSc
+				UpdateTwitterScedules(s)
+				UpdateDiscordScedules(disSc)
 				return err
 			},
 			Tick: 30 * time.Minute,
@@ -195,6 +199,18 @@ func _main(ctx context.Context) (string, error) {
 		},
 	})
 	return fmt.Sprintf("Hello ƛ!"), nil
+}
+
+func UpdateTwitterScedules(newsc twitter.Schedules) {
+	mtscs.Lock()
+	defer mtscs.Unlock()
+	twischedules = newsc
+}
+
+func UpdateDiscordScedules(newsc []discordschedule) {
+	mdscs.Lock()
+	defer mdscs.Unlock()
+	discordschedules = newsc
 }
 
 func YudenBot(ctx context.Context, execList []Executor) {

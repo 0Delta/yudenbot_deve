@@ -61,7 +61,8 @@ func Test_createAndPostDiscordChannel(t *testing.T) {
 		},
 		// TODO: Add test cases.
 	}
-	discordschedules = []
+
+	UpdateDiscordScedules([]discordschedule{})
 
 	ctx := context.Background()
 	buf, err := ioutil.ReadFile("./.config.yml")
