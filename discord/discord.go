@@ -29,12 +29,12 @@ func GetDiscord(token string) *discordgo.Session {
 func GetToken(filepath string) *DiscordAuth {
 	buf, err := ioutil.ReadFile(filepath)
 	if err != nil {
-		log.Fatal("Error while load token : ", err)
+		log.Fatal("error: Error while load token : ", err)
 	}
 	var auth DiscordAuth
 	err = yaml.Unmarshal(buf, &auth)
 	if err != nil {
-		log.Fatal("Error while unmarshal token: ", err)
+		log.Fatal("error: Error while unmarshal token: ", err)
 	}
 	return &auth
 }
@@ -44,8 +44,7 @@ func discodeInit(token string) {
 	Token := "Bot " + token
 	discord, err := discordgo.New()
 	if err != nil {
-		log.Println("Error logging in")
-		log.Fatal(err)
+		log.Fatalln("error: Error logging in : ", err)
 	}
 	discord.Token = Token
 
@@ -53,7 +52,7 @@ func discodeInit(token string) {
 	// websocketを開いてlistening開始
 	err = discord.Open()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("error: Error open discord", err)
 	}
 	session = discord
 }
@@ -62,19 +61,20 @@ func discodeInit(token string) {
 func SendMessage(s *discordgo.Session, c *discordgo.Channel, msg string) *discordgo.Message {
 	newMes, err := s.ChannelMessageSend(c.ID, msg)
 
-	log.Println(">>> " + msg)
 	if err != nil {
-		log.Println("Error sending message: ", err)
+		log.Println("error: Error sending message: ", err)
+		return nil
 	}
+	log.Println("info: Post Message : " + msg)
 	return newMes
 }
 
 func CreateTextChannel(s *discordgo.Session, guildid string, name string) *discordgo.Channel {
 	newCh, err := s.GuildChannelCreate(guildid, name, discordgo.ChannelTypeGuildText)
 	if err != nil {
-		log.Println("Error Create channel : ", err)
+		log.Println("error: Error Create channel : ", err)
 		return nil
 	}
-	log.Println("Create Channel : " + name + "@" + newCh.ID)
+	log.Println("info: Create Channel : " + name + "@" + newCh.ID)
 	return newCh
 }

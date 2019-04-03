@@ -18,7 +18,7 @@ type Executor struct {
 }
 
 func Schedule(ctx context.Context, execList []Executor) (err error) {
-	log.Println("scheduler start")
+	log.Println("info: scheduler start")
 	signalCh := make(chan os.Signal)
 	signal.Notify(signalCh,
 		syscall.SIGHUP,
@@ -44,23 +44,23 @@ func Schedule(ctx context.Context, execList []Executor) (err error) {
 			for _, e := range execList {
 				select {
 				case <-e._ticker.C:
-					log.Println("exec : ", e.Name)
+					log.Println("debug: exec : ", e.Name)
 					go e.Fnc(ctx)
 				case <-stopTimer:
-					log.Println("Timer stop.")
+					log.Println("info: Timer stop.")
 					break LOOP
 				case <-masterTick.C:
 					continue
 				}
 			}
 		}
-		log.Println("timerfunc end.")
+		log.Println("info: timerfunc end.")
 	}(chStop, ctx)
 
 	sigCh := <-signalCh
 	cancelFnc()
 	// catch os signal
-	log.Println("!! catch signal !! : ", sigCh)
+	log.Println("info: !! catch signal !! : ", sigCh)
 
 	chStop <- 0 // stop ticker
 	close(chStop)

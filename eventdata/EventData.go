@@ -52,18 +52,18 @@ func GetEventsFromWordpress(url string, dayLineHour int) (events []EventData, er
 	sdt := nowt.Format("2006/01/02T15:04")
 	edt := nowt.Add(2 * 24 * time.Hour).Add(1 * time.Minute).Format("2006/01/02T15:04")
 	url = "https://" + url + "/?rest_route=/tribe/events/v1/events" + "&start_date=" + sdt + "&end_date=" + edt
-	log.Println("Getting URL : ", url)
+	log.Println("info: Getting URL : ", url)
 
 	resp, err := http.Get(url)
 	if err != nil {
-		log.Println("HTTP Get error:", err)
+		log.Println("error: HTTP Get error:", err)
 		return
 	}
 	defer resp.Body.Close()
 
 	byteArray, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Println("HTTP Read error:", err)
+		log.Println("error: HTTP Read error:", err)
 		return
 	}
 
@@ -77,26 +77,26 @@ func GetEventDatas(jsonBytes []byte) (datas []EventData, err error) {
 	s := md5.New()
 	hash := s.Sum(jsonBytes)
 	if reflect.DeepEqual(eventsHash, hash) {
-		log.Println("GetEventDatas return cache")
+		log.Println("debug: GetEventDatas return cache")
 		return datasCache, nil
 	}
 
 	rawdatas := new(rawEventDatas)
 	err = json.Unmarshal(jsonBytes, rawdatas)
 	if err != nil {
-		log.Println("JSON Unmarshal error:", err)
+		log.Println("error: JSON Unmarshal error:", err)
 		return
 	}
 
 	for _, rawdata := range rawdatas.EventData {
 		d, err := parseEventData(&rawdata)
 		if err != nil {
-			log.Println("EventData Parse Error:", err)
+			log.Println("error: EventData Parse Error:", err)
 			continue
 		}
 		datas = append(datas, d)
 	}
-	log.Println("Update Events : ", datas)
+	log.Println("info: Update Events : ", datas)
 	eventsHash = hash
 	datasCache = datas
 	return datasCache, nil
@@ -106,7 +106,7 @@ func GetEventData(jsonBytes []byte) (data EventData, err error) {
 	rawdata := new(rawEventData)
 	err = json.Unmarshal(jsonBytes, rawdata)
 	if err != nil {
-		log.Println("JSON Unmarshal error:", err)
+		log.Println("error: JSON Unmarshal error:", err)
 		return
 	}
 
@@ -156,7 +156,7 @@ func parseDescription(raw string) (parsed string) {
 			parsed += fmt.Sprint(t[2])
 		}
 	}
-	log.Print(parsed)
+	log.Print("trace: ", parsed)
 
 	return parsed
 }

@@ -66,12 +66,12 @@ func GetConfig(ctx context.Context) (args *configArgs, err error) {
 	v := ctx.Value(config)
 	buf, ok := v.([]byte)
 	if !ok {
-		log.Fatal("Error while load token : ", fmt.Errorf("token not found"))
+		log.Fatal("alert: Error while load token : ", fmt.Errorf("token not found"))
 		return nil, err
 	}
 	err = yaml.Unmarshal(buf, &args)
 	if err != nil {
-		log.Fatal("Error while unmarshal token: ", err)
+		log.Fatal("alert:Error while unmarshal token: ", err)
 		return nil, err
 	}
 	return args, nil
@@ -84,12 +84,12 @@ type secretConf struct {
 func GetToken(filepath string) *secretConf {
 	buf, err := ioutil.ReadFile(filepath)
 	if err != nil {
-		log.Fatal("Error while load token : ", err)
+		log.Fatal("alert:Error while load token : ", err)
 	}
 	var conf secretConf
 	err = yaml.Unmarshal(buf, &conf)
 	if err != nil {
-		log.Fatal("Error while unmarshal token: ", err)
+		log.Fatal("alert:Error while unmarshal token: ", err)
 	}
 	return &conf
 }
@@ -106,7 +106,7 @@ func _main(ctx context.Context) (string, error) {
 
 	buf, err := ioutil.ReadFile("./.config.yml")
 	if err != nil {
-		log.Fatal("Error while load config : ", err)
+		log.Fatal("alert:Error while load config : ", err)
 	}
 	ctx = context.WithValue(ctx, config, buf)
 	conf := GetToken(".token.yml")
@@ -147,10 +147,10 @@ func UpdateDiscordScedules(newsc []discordschedule) {
 }
 
 func YudenBot(ctx context.Context, execList []Executor) {
-	log.Print("run Yuden-Bot")
+	log.Print("info: run Yuden-Bot")
 
 	Schedule(ctx, execList)
-	log.Println("Yuden-Bot End.")
+	log.Println("info: Yuden-Bot End.")
 }
 
 // compornents
@@ -236,7 +236,7 @@ func fetcher(ctx context.Context) (err error) {
 	// auth := twitter.GetToken("./.token.yml")
 	for _, t := range twischedules {
 		if t.Time.After(fetchtime) && t.Time.Before(now) && !t.Executed {
-			log.Printf("tweet : %v", t.Message)
+			log.Printf("info: tweet : %v", t.Message)
 			// twitter.Tweet(t.Message, auth)
 			t.Executed = true
 		}
@@ -254,7 +254,7 @@ func createAndPostDiscordChannel(ctx context.Context) (err error) {
 	auth := discord.GetToken("./.token.yml")
 	for _, d := range discordschedules {
 		if d.Time.After(fetchtime) && d.Time.Before(now) && !d.Executed {
-			log.Printf("discord : %v", d.Event.Title)
+			log.Printf("info: discord : %v", d.Event.Title)
 			s := discord.GetDiscord(auth.Token)
 			chname := fmt.Sprintf("%s-%s", d.Event.StartDate.Format("0102"), d.Event.Title)
 			c := discord.CreateTextChannel(s, auth.GuildID, chname)

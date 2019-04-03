@@ -27,12 +27,12 @@ type TwitterAuth struct {
 func GetToken(filepath string) *TwitterAuth {
 	buf, err := ioutil.ReadFile(filepath)
 	if err != nil {
-		log.Fatal("Error while load token : ", err)
+		log.Fatal("error: Error while load token : ", err)
 	}
 	var auth TwitterAuth
 	err = yaml.Unmarshal(buf, &auth)
 	if err != nil {
-		log.Fatal("Error while unmarshal token: ", err)
+		log.Fatal("error: Error while unmarshal token: ", err)
 	}
 	return &auth
 }
@@ -45,8 +45,8 @@ func getTwitterAPI(auth *TwitterAuth) *anaconda.TwitterApi {
 
 	if twitterAPI == nil || reflect.DeepEqual(apiHash, hash) == false {
 		// (re)Authnication
-		log.Println("TwitterAPI Authnication")
-		log.Println("new authtoken hash : ", hash)
+		log.Println("debug: TwitterAPI Authnication")
+		log.Println("debug: new authtoken hash : ", hash)
 		anaconda.SetConsumerKey(auth.ConsumerKey)
 		anaconda.SetConsumerSecret(auth.ConsumerSecret)
 		twitterAPI = anaconda.NewTwitterApi(auth.AccessToken, auth.AccessSecret)
@@ -59,16 +59,16 @@ func Tweet(message string, auth *TwitterAuth) (err error) {
 
 	api := getTwitterAPI(auth)
 	if api == nil {
-		log.Println("Can't Get TwitterAPI Object")
+		log.Println("error: Can't Get TwitterAPI Object")
 		return *new(error)
 	}
 	tweet, err := api.PostTweet(message, nil)
 	if err != nil {
-		log.Println("Error while post tweet : ", err)
+		log.Println("error: Error while post tweet : ", err)
 		return err
 	}
-	log.Println("tweet success")
-	log.Println(tweet.Text)
+	log.Println("info: tweet success")
+	log.Println("info: ", tweet.Text)
 	return nil
 }
 
@@ -95,9 +95,9 @@ func (s *Schedules) Append(e eventdata.EventData, t time.Time, msg string) {
 				Executed: false,
 				Hash:     h,
 			})
-		log.Printf("Schedule append : %v\n%v\n", t.In(jst), msg)
+		log.Printf("info: Schedule append : %v\n%v\n", t.In(jst), msg)
 	} else {
-		log.Printf("Schedule append skip : %v\n%v\n", t.In(jst), msg)
+		log.Printf("debug: Schedule append skip : %v\n%v\n", t.In(jst), msg)
 	}
 }
 
