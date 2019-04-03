@@ -194,7 +194,6 @@ func updater(ctx context.Context) (err error) {
 				"#インフラ勉強会",
 			}, ""),
 		)
-		disSc = append(disSc, discordschedule{e, e.StartDate.Add(-30 * time.Minute), false})
 		// today's summary
 		d = time.Now()
 		if e.StartDate.Before(dayLine) {
@@ -207,6 +206,9 @@ func updater(ctx context.Context) (err error) {
 					e.URL,
 				}, ""),
 			)
+			disSc = append(disSc, discordschedule{e,
+				time.Date(d.Year(), d.Month(), d.Day(), conf.SummaryPostHour, 0, 0, 0, jst),
+				false})
 		}
 		// next
 		d = d.Add(24 * time.Hour)
