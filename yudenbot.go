@@ -27,6 +27,7 @@ import (
 	"github.com/0Delta/yudenbot_devel/discord"
 	"github.com/0Delta/yudenbot_devel/eventdata"
 	"github.com/0Delta/yudenbot_devel/twitter"
+	"github.com/comail/colog"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -110,7 +111,14 @@ func _main(ctx context.Context) (string, error) {
 	}
 	ctx = context.WithValue(ctx, config, buf)
 	conf := GetToken(".token.yml")
-	colog2slack.Enable(conf.SlackURL4Log)
+	colog2slack.Enable(conf.SlackURL4Log,
+		colog.LAlert,
+		colog.LError,
+		colog.LWarning,
+		// colog.LInfo,
+		// colog.LDebug,
+		// colog.LTrace,
+	)
 
 	YudenBot(ctx, []Executor{
 		Executor{
