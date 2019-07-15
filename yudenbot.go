@@ -290,6 +290,7 @@ http://bit.ly/2HWB9ZL
 勉強会中、みんなの前だとちょっと質問しづらいな‥って思ったら質問箱 BOT に "Q." が先頭についたメッセージを送ってください。
 http://bit.ly/2rjZyjL`
 			discord.SendMessage(s, c, message)
+			discord.ChangeChannelParentID(s,c,"オンライン勉強会はこちら")
 			d.Executed = true
 		}
 	}

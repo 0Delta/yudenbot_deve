@@ -78,3 +78,20 @@ func CreateTextChannel(s *discordgo.Session, guildid string, name string) *disco
 	log.Println("info: Create Channel : " + name + "@" + newCh.ID)
 	return newCh
 }
+
+func ChangeChannelParentID(s *discordgo.Session, channel *discordgo.Channel, ParentName string) (*discordgo.Channel, error) {
+	nconf := &discordgo.ChannelEdit{}
+	guild, err := s.Guild(channel.GuildID)
+	if err != nil {
+		log.Println("error : Error while move channel : ",err)
+		return nil,err
+	}
+	for _,c := range guild.Channels {
+		if (c.Type == discordgo.ChannelTypeGuildCategory && c.Name == ParentName){
+			nconf.ParentID = c.ID
+			log.Print("debug : Channel will move to " + c.Name)
+		}
+	}
+	newCh, err := s.ChannelEditComplex(channel.ID, nconf)
+	return newCh, err
+}

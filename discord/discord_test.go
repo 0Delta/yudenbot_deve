@@ -20,4 +20,5 @@ func Test_discodeInit(t *testing.T) {
 	t.Run("Post", func(t *testing.T) {
 		SendMessage(s, c, "テストメッセージです")
 	})
+	ChangeChannelParentID(s,c,"てすと")
 }
