@@ -272,7 +272,7 @@ func createAndPostDiscordChannel(ctx context.Context) (err error) {
 			// create post message
 			message := fmt.Sprintln(d.Event.Title)
 			message += fmt.Sprintln(d.Event.URL)
-			message += fmt.Sprintf("%s 〜 %s", d.Event.StartDate.Format("01:02"), d.Event.StartDate.Format("01:02"))
+			message += fmt.Sprintf("%s 〜 %s", d.Event.StartDate.In(jst).Format("15:04"), d.Event.EndDate.In(jst).Format("15:04"))
 			message += fmt.Sprintln()
 			message += fmt.Sprintln("----")
 			message += d.Event.Description
